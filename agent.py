@@ -277,7 +277,7 @@ def run(inp):
         yield {"type": "error", "message": "Please provide three films."}
         return
     src = "fixture (offline sample data)" if qloo.FIXTURES else "Qloo live"
-    yield {"type": "status", "message": f"Qloo source: {src}. Planner: {'Claude' if AKEY else 'scripted (no ANTHROPIC_API_KEY needed)'}."}
+    yield {"type": "status", "message": f"Qloo source: {src}. Planner: {'Claude' if AKEY else 'using QLOO api'}."}
     if not AKEY:
         yield from _script(inp)
         return
