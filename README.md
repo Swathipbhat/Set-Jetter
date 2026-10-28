@@ -1,4 +1,4 @@
-# SetJetter AI
+# SetJetter
 
 Name three films you love; an agent finds where in the world feels like them.
 
