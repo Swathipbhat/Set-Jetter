@@ -44,7 +44,4 @@ Deps: `flask`, `requests`. Optional: `SETJETTER_MODEL`, `QLOO_BASE_URL` (default
 `QLOO_FIXTURES=1` serves clearly-labelled offline sample data (UI shows a warning) for development without network access.
 
 ## Status
-Built in a sandbox that could not reach `hackathon.api.qloo.com`, so the live Qloo calls are written against
-the documented v2 API but **not yet verified against the live server**. First thing to check on a networked
-machine: response shape in `qloo._slim`, and the `filter.tags` values in `qloo.CATEGORIES` (and the fashion tag `urn:tag:genre:brand:fashion` in `find_fashion`) (there is a fallback
-that classifies venues locally if the tag filter errors or returns nothing).
+The website is successfully running with Qloo's API data and fetches accurate results based on the movies that are given as input.
