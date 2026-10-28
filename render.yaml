@@ -1,0 +1,18 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: setjetter-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # One worker on purpose: the response cache and learned Qloo fallbacks live in process memory.
+    # Threads give concurrency; --timeout covers a slow Qloo response. Streaming needs the gthread worker.
+    startCommand: gunicorn server:app --worker-class gthread --workers 1 --threads 8 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: QLOO_API_KEY
+        sync: false          # you enter the value in the Render dashboard; it is never stored in the repo
+      - key: RATE_LIMIT_PER_MIN
+        value: "8"
