@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SetJetter</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<style>
+:root{--bg:#0d0b10;--panel:#17141c;--card:#100e14;--line:#2a2531;--ink:#f1ece4;--mute:#9a92a3;--accent:#ff5d73;--gold:#e9b44c;--ok:#5fd4a0}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 70% -10%,#2a1630 0,transparent 60%),var(--bg);color:var(--ink);font:16px/1.5 Georgia,'Iowan Old Style',serif}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px 40px}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:22px 0 10px;flex-wrap:wrap}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);margin:0;letter-spacing:-.02em;line-height:1}
+h1 em{color:var(--accent);font-style:normal}
+.tag{color:var(--mute);font:.9rem system-ui,sans-serif}
+details#trip{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 16px;font-family:system-ui,sans-serif}
+details#trip summary{cursor:pointer;padding:12px 0;font-weight:600;list-style:none;display:flex;align-items:baseline;gap:12px}
+details#trip summary::after{content:'▾';color:var(--mute);margin-left:auto}
+details#trip[open] summary::after{content:'▴'}
+form{padding-bottom:16px}
+.films{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fld{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.fld label{display:block;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+input[type=text],select{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--ink);padding:6px 0;font:inherit;font-family:Georgia,serif;min-width:0}
+select{background:var(--card)}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.vibe{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.75rem;color:var(--mute)}
+.vibe input{flex:1;accent-color:var(--accent)}.vibe output{width:2.2em;text-align:right;color:var(--gold)}
+.row{display:grid;grid-template-columns:1fr 1fr 100px 110px auto;gap:12px;margin-top:12px}
+button{background:var(--accent);color:#1a0b10;border:0;border-radius:10px;padding:12px 24px;font:600 1rem system-ui,sans-serif;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);padding:7px 14px;font-size:.82rem}
+button:disabled{opacity:.5;cursor:wait}
+.hint{font:.85rem system-ui,sans-serif;color:var(--mute)}.hint a{color:var(--gold);cursor:pointer;margin-right:12px}
+/* results */
+.strip{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 10px;font-family:system-ui,sans-serif}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:4px 12px 4px 4px;font-size:.82rem}
+.chip .im{width:26px;height:26px;border-radius:50%;flex:none}
+.chip small{color:var(--gold)}
+.spacer{flex:1}
+.ctabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.ctab{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:8px 16px;text-align:left;white-space:nowrap;font:600 1.05rem Georgia,serif}
+.ctab small{display:block;font:.72rem system-ui;color:var(--ok)}
+.ctab.on{border-color:var(--accent);background:#241822}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 42%;gap:16px;margin-top:12px;height:calc(100vh - 250px);min-height:520px}
+.left{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;min-height:0}
+.why{color:var(--mute);margin:0;padding:12px 16px 0;font-size:.95rem}
+.tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--line);font-family:system-ui,sans-serif}
+.tab{background:none;color:var(--mute);border:0;border-bottom:2px solid transparent;border-radius:0;padding:8px 12px;font:600 .88rem system-ui}
+.tab.on{color:var(--ink);border-color:var(--accent)}
+.panes{overflow:auto;padding:14px 16px;flex:1;min-height:0}
+.city,.pane,.dayp{display:none}.city.on,.pane.on,.dayp.on{display:block}
+.pills{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.pill{background:transparent;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:5px 14px;font:600 .8rem system-ui}
+.pill.on{background:var(--gold);color:#1a1205;border-color:var(--gold)}
+.slot{display:grid;grid-template-columns:84px 1fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:10px;cursor:pointer;font-family:system-ui,sans-serif}
+.slot:hover{border-color:var(--accent)}
+.slot .im{height:72px;border-radius:8px}
+.slot small{color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-size:.66rem}
+.slot h4{margin:2px 0;font:600 1.02rem Georgia,serif}.slot p{margin:0;color:var(--mute);font-size:.82rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif}
+.card .im{height:130px}.card.tall .im{height:190px}
+.card .b{padding:10px 12px 12px}
+.card small{color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-size:.66rem}
+.card h4{margin:3px 0;font:600 1rem Georgia,serif}.card p{margin:0;color:var(--mute);font-size:.8rem}
+.price{float:right;color:var(--ok);font-weight:600;font-size:.8rem}
+.im{position:relative;background:#1d1824;overflow:hidden}
+.im span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 1.6rem Georgia,serif;color:#5b5166}
+.im img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sec{margin:6px 0 8px;font:600 .75rem system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.sec+.grid{margin-bottom:16px}
+.base{margin-bottom:14px}
+.right{border-radius:14px;overflow:hidden;border:1px solid var(--line);min-height:0;position:relative}
+#map{position:absolute;inset:0;background:var(--card)}
+.nomap{padding:16px;color:var(--mute);font:.85rem system-ui}
+.warn{background:#2b1519;border:1px solid var(--accent);border-radius:10px;padding:10px 14px;font:.85rem system-ui,sans-serif;margin:12px 0}
+/* trace drawer */
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(380px,92vw);background:var(--panel);border-left:1px solid var(--line);transform:translateX(100%);transition:.25s;z-index:1000;padding:16px;display:flex;flex-direction:column}
+#drawer.open{transform:none}
+#drawer h2{font:600 .75rem system-ui;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+#trace{overflow:auto;flex:1;font:.76rem/1.45 ui-monospace,Menlo,monospace}
+.ev{border-left:2px solid var(--line);padding:2px 0 8px 10px;margin-bottom:6px}
+.ev.call{border-color:var(--gold)}.ev.res{border-color:var(--ok)}.ev.err{border-color:var(--accent)}
+.ev b{color:var(--gold)}.ev .sm{color:var(--mute);word-break:break-word}
+.badge{display:inline-block;font:600 .7rem system-ui,sans-serif;padding:2px 8px;border-radius:99px;background:#2a2531;color:var(--ok);margin-left:6px}.badge.fx{color:var(--accent)}
+.empty{display:flex;align-items:center;justify-content:center;height:50vh;color:var(--mute);font:.95rem system-ui;text-align:center}
+@media(max-width:900px){.films,.row{grid-template-columns:1fr}.split{grid-template-columns:1fr;height:auto}.right{height:300px;order:-1}.panes{max-height:none}}
+@media print{body{background:#fff;color:#000}header,.top,details,.strip button,.ctabs,.tabs,.pills,.right,#drawer{display:none}.split{display:block;height:auto}.left,.card,.slot{background:#fff;border-color:#bbb}.city,.pane,.dayp{display:block!important}.panes{overflow:visible}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>Set<em>Jetter</em> AI</h1><span class="tag">Three films in. Cities, stays, spots and outfits out.</span></div>
+  <details id="trip" open><summary>Plan a trip <span class="hint" id="tripsum"></span></summary>
+  <form id="f">
+    <div class="films">
+      <div class="fld"><label>Film 1</label><input type="text" name="f1" placeholder="Blade Runner 2049" required>
+        <div class="vibe">vibe <input type="range" name="w1" min="0" max="100" value="50"><output>50</output></div></div>
+      <div class="fld"><label>Film 2</label><input type="text" name="f2" placeholder="The Grand Budapest Hotel" required>
+        <div class="vibe">vibe <input type="range" name="w2" min="0" max="100" value="50"><output>50</output></div></div>
+      <div class="fld"><label>Film 3</label><input type="text" name="f3" placeholder="In the Mood for Love" required>
+        <div class="vibe">vibe <input type="range" name="w3" min="0" max="100" value="50"><output>50</output></div></div>
+    </div>
+    <div class="row">
+      <div class="fld"><label>Favorite artist (optional)</label><input type="text" name="artist" placeholder="e.g. Vangelis"></div>
+      <div class="fld"><label>Favorite restaurant (optional)</label><input type="text" name="food" placeholder="e.g. Nobu"></div>
+      <div class="fld"><label>Days</label><select name="days"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
+      <div class="fld"><label>Budget</label><select name="budget"><option value="">Any</option><option>$</option><option>$$</option><option>$$$</option></select></div>
+      <button id="go">Find my set</button>
+    </div>
+    <p class="hint" style="margin:10px 0 0">Vibe dial: 0 ignores a film, higher pulls the destinations toward it. Budget applies to stays, cafés and outfits. Try: <a data-s="Blade Runner 2049|Lost in Translation|In the Mood for Love">Neon &amp; nostalgia</a><a data-s="The Grand Budapest Hotel|Amélie|Moonrise Kingdom">Pastel whimsy</a></p>
+  </form></details>
+  <div id="out"><div class="empty">Your itinerary will appear here.</div></div>
+</div>
+<aside id="drawer"><h2>Agent trace <button class="ghost" id="closetr">Close</button></h2><div id="trace"></div></aside>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const form=$('#f'), tr=$('#trace'), drawer=$('#drawer'); let last=null, map=null, reg=[], cur=0;
+document.querySelectorAll('[data-s]').forEach(a=>a.onclick=()=>a.dataset.s.split('|').forEach((v,i)=>form['f'+(i+1)].value=v));
+form.querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>r.nextElementSibling.textContent=r.value);
+$('#closetr').onclick=()=>drawer.classList.remove('open');
+function add(cls,html){const d=document.createElement('div');d.className='ev '+cls;d.innerHTML=html;tr.appendChild(d);tr.scrollTop=1e9}
+function summarize(n,r){
+  if(r.error)return 'error: '+esc(r.error);
+  const b=`<span class="badge ${r.source==='fixture'?'fx':''}">${esc(r.source)}${r._ms!=null?' · '+(r._ms/1000).toFixed(1)+'s':''}</span>`;
+  if(n.startsWith('resolve'))return `<b>${esc(r.name)}</b> ${r.year||''} ${b}<div class="sm">${esc((r.tags||[]).join(', '))}</div>`;
+  if(n==='find_destinations')return `${b}<div class="sm">${(r.destinations||[]).map(d=>esc(d.name)+(d.affinity?' '+Math.round(d.affinity*100)+'%':'')).join(' · ')}</div>`;
+  if(n==='find_fashion')return `fashion ${b}<div class="sm">${(r.brands||[]).map(x=>esc(x.name)).join(' · ')||'none'}${r.note?' ('+esc(r.note)+')':''}</div>`;
+  return `${esc(r.category)} in ${esc(r.city)} ${b}<div class="sm">${(r.places||[]).map(p=>esc(p.name)).join(' · ')||'none'}${r.note?' ('+esc(r.note)+')':''}</div>`;
+}
+const im=(src,name)=>`<div class="im"><span>${esc((name||'?').replace(/^Fixture /,'').trim().charAt(0).toUpperCase())}</span>${src?`<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">`:''}</div>`;
+const price=l=>typeof l==='number'&&l>0?`<span class="price">${'$'.repeat(Math.min(l,4))}</span>`:'';
+function card(label,x,tall){
+  if(!x)return '';const m=x.meta||{};
+  return `<div class="card ${tall?'tall':''}">${im(m.image,x.name)}<div class="b"><small>${label}</small>${price(m.price_level)}<h4>${esc(x.name)}</h4><p>${esc(x.why)}</p>${m.address?`<p style="margin-top:4px">${esc(m.address)}</p>`:''}</div></div>`;
+}
+function itin(m,ci){
+  const it=m.itinerary;if(!it||!it.days.length)return '<p class="hint">Qloo returned too few venues to build a day plan.</p>';
+  const hm=m.hotel?.meta||{};
+  const base=m.hotel?`<div class="base"><div class="slot" style="cursor:default">${im(hm.image,m.hotel.name)}<div><small>Your base · stay ${price(hm.price_level)}</small><h4>${esc(m.hotel.name)}</h4><p>${esc(m.hotel.why)}</p>${hm.address?`<p>${esc(hm.address)}</p>`:''}</div></div></div>`:'';
+  return base+`<div class="pills">${it.days.map(d=>`<button class="pill ${d.day===1?'on':''}" data-c="${ci}" data-d="${d.day}">Day ${d.day}</button>`).join('')}</div>`+
+   it.days.map(d=>`<div class="dayp ${d.day===1?'on':''}" data-c="${ci}" data-d="${d.day}">${d.slots.map((s,si)=>`<div class="slot" data-c="${ci}" data-d="${d.day}" data-s="${si}">${im(s.image,s.name)}<div><small>${s.time} · ${esc(s.kind)}</small><h4>${esc(s.name)}</h4><p>${esc(s.why)}</p>${s.address?`<p>${esc(s.address)}</p>`:''}</div></div>`).join('')}</div>`).join('')+
+   (it.trimmed?'<p class="hint">Fewer days shown: Qloo returned fewer venues than needed to fill every day.</p>':'');
+}
+function stay(m){return `<div class="grid">${card('Stay',m.hotel)}${card('Coffee',m.cafe)}${m.hotspots.map(h=>card('Hotspot',h)).join('')}</div>`||''}
+function wardrobe(m){
+  const fa=m.fashion||[];if(!fa.length)return '<p class="hint">Qloo returned no fashion matches for this budget. Try a wider budget.</p>';
+  const by={};fa.forEach(x=>(by[x.film||'Your taste']=by[x.film||'Your taste']||[]).push(x));
+  const b=last?.inputs?.budget;
+  return (b?`<p class="hint" style="margin:0 0 10px">Filtered to your ${esc(b)} budget where Qloo has price data.</p>`:'')+
+    Object.entries(by).map(([f,xs])=>`<h5 class="sec">Dress like ${esc(f)}</h5><div class="grid">${xs.map(x=>card('Wear',x,true)).join('')}</div>`).join('');
+}
+function render(ev){
+  last=ev;const d=ev.data,ms=d.matches;cur=0;
+  const fx=tr.innerHTML.includes('badge fx')?'<div class="warn">Showing offline <b>sample fixtures</b>, not live Qloo data.</div>':'';
+  const chips=(ev.signals||[]).map(s=>`<span class="chip">${im(s.image,s.name)}<span>${esc(s.name)} <small>${s.weight}</small></span></span>`).join('');
+  const rm=d.grounding?.removed_ungrounded||[];
+  if(!ms.length){$('#out').innerHTML=fx+'<div class="warn">No grounded matches came back.</div>';return}
+  $('#out').innerHTML=fx+`<div class="strip">${chips}<span class="spacer"></span><button class="ghost" id="tb">Agent trace</button><button class="ghost" id="cp">Copy share link</button><button class="ghost" id="dl">Download .md</button><button class="ghost" onclick="print()">Print</button></div>
+  <div class="ctabs">${ms.map((m,i)=>`<button class="ctab ${i?'':'on'}" data-i="${i}">${esc(m.city)}<small>${m.match_pct}% taste match</small></button>`).join('')}</div>
+  <div class="split"><div class="left">${ms.map((m,i)=>`<section class="city ${i?'':'on'}" data-i="${i}" style="display:${i?'none':'flex'};flex-direction:column;min-height:0;flex:1">
+    <p class="why">${esc(m.why)} ${rm.length&&!i?`<span class="hint">(Grounding check removed ${rm.length} name(s) Qloo never returned.)</span>`:''}</p>
+    <div class="tabs"><button class="tab on" data-t="it">Itinerary</button><button class="tab" data-t="st">Stay &amp; eat</button><button class="tab" data-t="wd">Wardrobe</button></div>
+    <div class="panes"><div class="pane on" data-t="it">${itin(m,i)}</div><div class="pane" data-t="st">${stay(m)}</div><div class="pane" data-t="wd">${wardrobe(m)}</div></div></section>`).join('')}</div>
+  <div class="right"><div id="map"></div></div></div>`;
+  $('#tb').onclick=()=>drawer.classList.toggle('open');
+  $('#cp').onclick=e=>{navigator.clipboard?.writeText(location.origin+location.pathname+'?'+new URLSearchParams(new FormData(form)));e.target.textContent='Copied!'};
+  $('#dl').onclick=download;
+  document.querySelectorAll('.ctab').forEach(b=>b.onclick=()=>showCity(+b.dataset.i));
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{const s=b.closest('.city');s.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));s.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.t===b.dataset.t))});
+  document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>showDay(+b.dataset.c,+b.dataset.d));
+  document.querySelectorAll('.slot').forEach(s=>s.onclick=()=>pinFor(+s.dataset.c,+s.dataset.d,+s.dataset.s));
+  $('#trip').open=false;$('#tripsum').textContent=ms.map(m=>m.city).join(' · ');
+  drawer.classList.remove('open');
+  drawMap(ms);
+}
+function showCity(i){cur=i;
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+  document.querySelectorAll('.city').forEach(s=>{const on=+s.dataset.i===i;s.classList.toggle('on',on);s.style.display=on?'flex':'none'});
+  mapCity(i);
+}
+function showDay(c,d){
+  document.querySelectorAll(`.pill[data-c="${c}"]`).forEach(b=>b.classList.toggle('on',+b.dataset.d===d));
+  document.querySelectorAll(`.dayp[data-c="${c}"]`).forEach(p=>p.classList.toggle('on',+p.dataset.d===d));
+  styleMarkers(c,d);
+}
+const COLORS=['#ff5d73','#e9b44c','#5fd4a0','#7aa2ff'];
+function drawMap(ms){
+  reg=[];const host=$('#map');
+  if(typeof L==='undefined'){host.outerHTML='<div class="nomap">Map needs internet access to load (unpkg.com / OpenStreetMap). Everything else works without it.</div>';return}
+  map=L.map('map',{scrollWheelZoom:true});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,referrerPolicy:'strict-origin-when-cross-origin',attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+  ms.forEach((m,ci)=>{
+    reg[ci]=[];const add=(lat,lng,label,day,si,big)=>{if(typeof lat!=='number'||typeof lng!=='number')return;
+      const mk=L.circleMarker([lat,lng],{radius:big?10:6,color:COLORS[ci%4],fillColor:COLORS[ci%4],fillOpacity:.85}).bindPopup(label);
+      reg[ci].push({mk,day,si,ll:[lat,lng]})};
+    (m.itinerary?.days||[]).forEach(dy=>dy.slots.forEach((s,si)=>add(s.lat,s.lng,`<b>${esc(s.name)}</b><br>Day ${dy.day} · ${s.time}`,dy.day,si)));
+    if(m.hotel)add(m.hotel.meta?.lat,m.hotel.meta?.lng,`<b>${esc(m.hotel.name)}</b><br>Your base`,0,-1,true);
+  });
+  mapCity(0);
+}
+function mapCity(i){
+  if(!map)return;
+  reg.forEach((r,ci)=>r.forEach(x=>ci===i?x.mk.addTo(map):x.mk.remove()));
+  const pts=(reg[i]||[]).map(x=>x.ll);
+  if(pts.length)map.fitBounds(pts,{padding:[40,40]});else map.setView([20,0],2);
+  setTimeout(()=>map.invalidateSize&&map.invalidateSize(),50);
+  styleMarkers(i,1);
+}
+function styleMarkers(c,d){(reg[c]||[]).forEach(x=>x.mk.setStyle({fillOpacity:x.day===d||x.day===0?.95:.25,radius:x.day===d?9:(x.day===0?10:5)}))}
+function pinFor(c,d,si){const x=(reg[c]||[]).find(x=>x.day===d&&x.si===si);if(x&&map){map.setView(x.ll,Math.max(map.getZoom?.()||14,14));x.mk.openPopup()}}
+function download(){
+  const d=last.data;let md=`# SetJetter itinerary\n\n${d.dna.summary}\n\n`;
+  d.matches.forEach(m=>{md+=`## ${m.city} (${m.match_pct}% taste match)\n${m.why}\n\n`;
+    if(m.hotel)md+=`- **Stay:** ${m.hotel.name} - ${m.hotel.why}\n`;
+    if((m.fashion||[]).length)md+=`\n**Dress the part:** ${m.fashion.map(x=>x.name+(x.film?' (like '+x.film+')':'')).join(', ')}\n`;
+    (m.itinerary?.days||[]).forEach(dy=>{md+=`\n### Day ${dy.day}\n`;dy.slots.forEach(s=>md+=`- ${s.time}: ${s.name} (${s.kind}) - ${s.why}\n`)});md+='\n'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md],{type:'text/markdown'}));a.download='setjetter-itinerary.md';a.click();
+}
+function run(){
+  $('#go').disabled=true;tr.innerHTML='';drawer.classList.add('open');
+  $('#out').innerHTML='<div class="empty">The agent is reading your films\' taste DNA in Qloo… (trace on the right)</div>';
+  if(map){map.remove();map=null}
+  const q=new URLSearchParams(new FormData(form));history.replaceState(null,'','?'+q);
+  const es=new EventSource('/api/plan?'+q);
+  es.onmessage=m=>{const ev=JSON.parse(m.data);
+    if(ev.type==='status')add('',esc(ev.message));
+    else if(ev.type==='tool_call')add('call',`<b>${esc(ev.name)}</b><div class="sm">${esc(JSON.stringify(ev.args))}</div>`);
+    else if(ev.type==='tool_result')add('res',summarize(ev.name,ev.result));
+    else if(ev.type==='error'){add('err',esc(ev.message));$('#out').innerHTML=`<div class="warn">${esc(ev.message)}</div>`}
+    else if(ev.type==='final')render(ev)};
+  es.addEventListener('done',()=>{es.close();$('#go').disabled=false});
+  es.onerror=()=>{es.close();$('#go').disabled=false};
+}
+form.onsubmit=e=>{e.preventDefault();run()};
+const p=new URLSearchParams(location.search);
+if(p.get('f1')&&p.get('f2')&&p.get('f3')){
+  for(const [k,v] of p)if(form[k]){form[k].value=v;if(form[k].type==='range')form[k].oninput()}
+  window.addEventListener('load',run);
+}
+</script>
+</body>
+</html>
